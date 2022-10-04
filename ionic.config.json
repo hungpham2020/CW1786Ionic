@@ -1,0 +1,7 @@
+{
+  "name": "CW1786CWIonic",
+  "integrations": {
+    "capacitor": {}
+  },
+  "type": "react"
+}
