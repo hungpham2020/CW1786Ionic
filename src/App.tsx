@@ -1,7 +1,6 @@
 import { Redirect, Route } from 'react-router-dom';
-import { IonApp, IonRouterOutlet, setupIonicReact } from '@ionic/react';
+import { IonApp, IonRoute, IonRouterOutlet, setupIonicReact } from '@ionic/react';
 import { IonReactRouter } from '@ionic/react-router';
-import Home from './pages/Home';
 
 /* Core CSS required for Ionic components to work properly */
 import '@ionic/react/css/core.css';
@@ -21,20 +20,24 @@ import '@ionic/react/css/display.css';
 
 /* Theme variables */
 import './theme/variables.css';
+import AddTrip from './components/Trips/AddTrip';
+import {initDB} from "react-indexed-db"
+import { DbConfig } from './components/DbConfig';
+import ViewAllTrips from './components/Trips/ViewAllTrips';
+import TripDetail from './components/Trips/TripDetail';
 
 setupIonicReact();
+
+initDB(DbConfig);
 
 const App: React.FC = () => (
   <IonApp>
     <IonReactRouter>
       <IonRouterOutlet>
-        <Route exact path="/home">
-          <Home />
-        </Route>
-        <Route exact path="/">
-          <Redirect to="/home" />
-        </Route>
+        <Route exact path="/" component={AddTrip}/>
+        <Route exact path="/viewAllTrips" component={ViewAllTrips}/>
       </IonRouterOutlet>
+      <Route exact path="/detail/:id" component={TripDetail}/>
     </IonReactRouter>
   </IonApp>
 );
