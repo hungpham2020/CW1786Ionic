@@ -21,10 +21,13 @@ import '@ionic/react/css/display.css';
 /* Theme variables */
 import './theme/variables.css';
 import AddTrip from './components/Trips/AddTrip';
-import {initDB} from "react-indexed-db"
+import { initDB } from "react-indexed-db"
 import { DbConfig } from './components/DbConfig';
 import ViewAllTrips from './components/Trips/ViewAllTrips';
 import TripDetail from './components/Trips/TripDetail';
+import AddExpense from './components/Expenses/AddExpense';
+import ViewAllExpenses from './components/Expenses/ViewAllExpenses';
+import Editrip from './components/Trips/EditTrip';
 
 setupIonicReact();
 
@@ -34,10 +37,13 @@ const App: React.FC = () => (
   <IonApp>
     <IonReactRouter>
       <IonRouterOutlet>
-        <Route exact path="/" component={AddTrip}/>
-        <Route exact path="/viewAllTrips" component={ViewAllTrips}/>
+        <IonRoute exact path="/"  render={() => <AddTrip/>} />
+        <IonRoute exact path="/viewAllTrips" render={() => <ViewAllTrips />} />
+        <IonRoute exact path="/detail/:id" render={() =><TripDetail/>} />
+        <IonRoute exact path="/add/expense/:id" render={() => <AddExpense />} />
+        <IonRoute exact path="/viewAllExpenses/:id" render={() => <ViewAllExpenses />} />
+        <IonRoute exact path="/editTrip/:id" render={() => <Editrip />} />
       </IonRouterOutlet>
-      <Route exact path="/detail/:id" component={TripDetail}/>
     </IonReactRouter>
   </IonApp>
 );

@@ -1,12 +1,15 @@
-import React, { useState } from "react";
-import { IonContent, IonHeader, IonPage, IonTitle, IonToolbar, IonInput, IonItem, IonLabel, IonList, IonRadio, IonRadioGroup, IonButton, IonButtons, useIonToast } from '@ionic/react';
+import React, { useEffect, useState } from "react";
+import { IonContent, IonHeader, IonPage, IonTitle, IonToolbar, IonInput, IonItem, IonLabel, IonList, IonRadio, IonRadioGroup, IonButton, IonButtons, useIonToast, IonBackButton } from '@ionic/react';
 import { useIndexedDB } from "react-indexed-db";
-import {useHistory} from "react-router-dom"
+import { useHistory, useParams } from "react-router-dom"
 import { dataInterface } from "../Constants";
 
-export default function AddTrip() {
+export default function Editrip() {
+    const params = useParams<any>();
+    const { id } = params;
     const [present] = useIonToast();
     const [data, setData] = useState<dataInterface>({
+        id: parseInt(id),
         name: "",
         destination: "",
         date: null,
@@ -24,30 +27,42 @@ export default function AddTrip() {
 
     const history = useHistory();
 
-    const { add, clear } = useIndexedDB("trips");
+    const { getByID, update } = useIndexedDB("trips");
 
-    const clearExpenses = useIndexedDB("expenses").clear;
+    useEffect(() => {
+        getByID(id).then(res => setData({
+            ...data,
+            name: res.name,
+            destination: res.destination,
+            date: res.date,
+            description: res.description,
+            duration: res.duration,
+            riskAssessment: res.riskAssessment
+        }))
+    }, []);
 
     const onChange = (value: any, type: string) => {
         setData({ ...data, [type]: value });
-    }   
+    }
 
     const handleSubmit = () => {
         if (validate()) {
-            add(data)
-            setData({
-                name: "",
-                destination: "",
-                date: null,
-                description: "",
-                duration: null,
-                riskAssessment: true
-            });
-            present({
-                message: 'Add Trip successfully',
-                duration: 3000,
-                position: 'top'
-            });
+            update(data).then(() => {
+                setData({
+                    name: "",
+                    destination: "",
+                    date: null,
+                    description: "",
+                    duration: null,
+                    riskAssessment: true
+                });
+                present({
+                    message: 'Edit Trip successfully',
+                    duration: 3000,
+                    position: 'top'
+                });
+                history.goBack();
+            }).catch(err => console.log(err));
         }
     }
 
@@ -94,14 +109,14 @@ export default function AddTrip() {
             <IonHeader>
                 <IonToolbar color="primary">
                     <IonTitle>CW1786</IonTitle>
-                    <IonButtons slot="end">
-                        <IonButton auto-hide="true" onClick={() => history.push('/viewalltrips')}>View All Trips</IonButton>
+                    <IonButtons slot="start">
+                        <IonBackButton auto-hide="true">Back</IonBackButton>
                     </IonButtons>
                 </IonToolbar>
             </IonHeader>
             <IonContent>
                 <div className="mt-3 ms-3">
-                    <h1 className="display-4 text-center">Add Trip</h1>
+                    <h1 className="display-4 text-center">Edit Trip</h1>
                     <div>
                         <IonLabel>Name</IonLabel>
                         <IonInput value={data.name} placeholder="Enter Name of Trip" onIonChange={(e) => onChange(e.detail.value!, "name")}></IonInput>
@@ -142,11 +157,7 @@ export default function AddTrip() {
                     </IonRadioGroup>
                 </IonList>
                 <div className="mt-4 d-flex justify-content-center" style={{ width: "100%" }}>
-                    <IonButton className="me-3" onClick={handleSubmit}>Add</IonButton>
-                    <IonButton className="me-3" color="warning" onClick={() => {
-                        clear();
-                        clearExpenses();
-                    }}>Reset Data</IonButton>
+                    <IonButton className="me-3" onClick={handleSubmit}>Submit</IonButton>
                 </div>
             </IonContent>
         </IonPage>

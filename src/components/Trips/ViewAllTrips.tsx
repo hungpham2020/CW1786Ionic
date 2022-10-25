@@ -1,46 +1,65 @@
-import { IonBackButton, IonButton, IonButtons, IonContent, IonHeader, IonItem, IonLabel, IonList, IonModal, IonPage, IonTitle, IonToolbar } from "@ionic/react";
+import { IonBackButton, IonButton, IonButtons, IonContent, IonHeader, IonInput, IonItem, IonItemOption, IonItemOptions, IonItemSliding, IonLabel, IonList, IonModal, IonPage, IonTitle, IonToolbar, useIonActionSheet, useIonToast } from "@ionic/react";
 import React, { useEffect, useState } from "react";
 import { useIndexedDB } from "react-indexed-db";
 import { useHistory } from "react-router-dom";
 
 export default function ViewAllTrips() {
-    const { getAll } = useIndexedDB("trips");
+    const { getAll, deleteRecord } = useIndexedDB("trips");
+    const deleteExpense = useIndexedDB("expenses").deleteRecord;
+    const getAllExpense = useIndexedDB("expenses").getAll;
 
     const [data, setData] = useState<any[]>([]);
-    const [isOpen, setIsOpen] = useState<boolean>(false);
-    const [currentItem, setCurrentItem] = useState<any>(null);
+    const [baseItems, setBaseItems] = useState<any[]>([]);
+    const [search, setSearch] = useState<any>("");
+    const [present] = useIonActionSheet();
+    const [toast] = useIonToast();
+
 
     const history = useHistory();
 
     useEffect(() => {
         getAll().then(res => {
             setData(res);
+            setBaseItems(res);
         })
     }, []);
 
-    const handleItemClick = (item: any) => {
-        setIsOpen(!isOpen);
-        setCurrentItem(item);
+    const onChange = (value: any) => {
+        setSearch(value);
     }
 
-    const handleBtnClick = (btnType: string) => {
-        switch (btnType) {
-            case "detail":
-                history.push(`/detail/${currentItem?.id}`);
-                break;
-            case "edit":
-                history.push("/edit/" + currentItem?.id);
-                break;
-            case "delete":
-                
-                break;
+    const handleSearch = () => {
+        let filter = baseItems.filter((x: any) => x.name.toLowerCase().includes(search.toLowerCase()));
+        if (!search) {
+            setData(baseItems);
+        } else {
+            setData(filter);
         }
+    }
+
+    const confirmDelete = (id: number) => {
+        deleteRecord(id).then(() => {
+            let data = baseItems.filter((x: any) => x.id !== id);
+            setData(data);
+            setBaseItems(data);
+            toast({
+                message: 'Delete Trip successfully',
+                duration: 3000,
+                position: 'top'
+            });
+        });
+        getAllExpense().then(res => {
+            res = res.filter(x => x.tripId === id.toString());
+            res.map(item => {
+                deleteExpense(item.id)
+            })
+        })
     }
 
     return (
         <IonPage>
             <IonHeader>
-                <IonToolbar>
+                <IonToolbar color="primary">
                     <IonTitle>CW1786</IonTitle>
                     <IonButtons slot="start">
                         <IonBackButton auto-hide="true">Back</IonBackButton>
@@ -49,34 +68,49 @@ export default function ViewAllTrips() {
             </IonHeader>
             <IonContent>
                 <h3 className="display-4 text-center my-2">View All Trips</h3>
+                <div className="d-flex mx-3 mb-2">
+                    <IonInput placeholder="Enter Name to search" onIonChange={(e) => onChange(e.detail.value!)}></IonInput>
+                    <IonButton onClick={handleSearch} color="tertiary">Search</IonButton>
+                </div>
                 <IonList>
-                    {data.map(item => (
-                        <IonItem key={item.id} onClick={() => handleItemClick(item)}>
-                            <IonLabel>{item.id + " - " + item.name + " - " + item.date}</IonLabel>
-                        </IonItem>
-                    ))}
+                    {data ? data.map(item => (
+                        <IonItemSliding key={item.id}>
+                            <IonItemOptions side="start">
+                                <IonItemOption color="tertiary" onClick={() => history.push(`/detail/${item.id}`)}>Detail</IonItemOption>
+                            </IonItemOptions>
+
+                            <IonItem>
+                                <IonLabel>{item.id + " - " + item.name + " - " + item.date}</IonLabel>
+                            </IonItem>
+
+                            <IonItemOptions side="end">
+                                <IonItemOption color="warning" onClick={() => history.push("/editTrip/" + item.id)}>Edit</IonItemOption>
+                                <IonItemOption color="danger" onClick={() =>
+                                    present({
+                                        header: 'Delete Trip?',
+                                        buttons: [
+                                            {
+                                                text: 'Delete',
+                                                role: 'destructive',
+                                                handler() {
+                                                    confirmDelete(item.id)
+                                                },
+                                            },
+                                            {
+                                                text: 'Cancel',
+                                                role: 'cancel',
+                                                data: {
+                                                    action: 'cancel',
+                                                },
+                                            },
+                                        ],
+                                        // onDidDismiss:,
+                                    })
+                                }>Delete</IonItemOption>
+                            </IonItemOptions>
+                        </IonItemSliding>
+                    )): "No data"}
                 </IonList>
-                <IonModal
-                    isOpen={isOpen}
-                    onBlur={() => setIsOpen(!isOpen)}
-                    initialBreakpoint={0.25}
-                    breakpoints={[0, 0.25, 0.5, 0.75]}
-                    handleBehavior="cycle"
-                >
-                    <IonContent className="ion-padding">
-                        <IonList className="pt-4">
-                            <IonItem onClick={() => handleBtnClick("detail")}>
-                                <IonLabel className="text-center">Detail</IonLabel>
-                            </IonItem>
-                            <IonItem onClick={() => handleBtnClick("edit")}>
-                                <IonLabel className="text-center">Edit</IonLabel>
-                            </IonItem>
-                            <IonItem onClick={() => handleBtnClick("delete")}>
-                                <IonLabel className="text-center">Delete</IonLabel>
-                            </IonItem>
-                        </IonList>
-                    </IonContent>
-                </IonModal>
             </IonContent>
         </IonPage>
     )
