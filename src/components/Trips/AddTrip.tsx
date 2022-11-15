@@ -30,7 +30,7 @@ export default function AddTrip() {
 
     const onChange = (value: any, type: string) => {
         setData({ ...data, [type]: value });
-    }   
+    }
 
     const handleSubmit = () => {
         if (validate()) {
@@ -53,7 +53,7 @@ export default function AddTrip() {
 
     const validate = () => {
         let isPass: boolean = true;
-        let err = {
+        let err: any = {
             name: "",
             destination: "",
             date: "",

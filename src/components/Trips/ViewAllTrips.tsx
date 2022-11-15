@@ -14,7 +14,6 @@ export default function ViewAllTrips() {
     const [present] = useIonActionSheet();
     const [toast] = useIonToast();
 
-
     const history = useHistory();
 
     useEffect(() => {
